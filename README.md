@@ -13,11 +13,14 @@ The package offers:
 
 This is a simple study proposed package by Me, however I invite the community to contribute. Please help by trying it out, reporting bugs, making improvments and other cool thigs. :)
 
+Link pypi: https://pypi.org/project/cluster-ss/
+
 ## Installation
 
 ```
-pip install cluster_ss
+pip install cluster_ss==0.0.2
 ```
+For latest.
 
 ## Usage
 
