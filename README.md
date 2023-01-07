@@ -18,7 +18,7 @@ Link pypi: https://pypi.org/project/cluster-ss/
 ## Installation
 
 ```
-pip install cluster_ss==0.0.2
+pip install cluster-ss
 ```
 For latest.
 
