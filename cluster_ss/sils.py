@@ -392,6 +392,7 @@ class ClusterSupport():
         """
         sils_dict, sils_per_k, no_k_sil = {}, pd.DataFrame(), pd.DataFrame()
         no_k_est = [i.__name__.lower() for i in NO_K_CLUSTER_EST]
+        pass_est = [i.lower() for i in PASS_CLUSTERS_K]
 
         for name, est, k_info in tqdm(zip(est_names, models, est_infos)):
             if self.verbose:
@@ -413,7 +414,7 @@ class ClusterSupport():
                     elif k_info == 1: model = est.set_params(n_components=k)
                     else: model = est
 
-                    if (k > X.shape[-1]) and (name in PASS_CLUSTERS_K):
+                    if (k > X.shape[-1]) and (name in pass_est):
                         if self.verbose:
                             print(f"Pass {name}, n_samples={X.shape[-1]} >= n_clusters={k}")
                         sil_score = 0
