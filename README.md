@@ -100,47 +100,45 @@ extra_parameters = [
     {'GaussianMixture': {'max_iter': 110,
                          'n_init': 2,
                          'reg_covar': 1e-05,
-                         'tol': 0.01,}}
+                         'tol': 0.01}}
 ]
+
+# Select a list of estimators names 
+# for skip setup and fitting
+skipped = ["spectralcoclustering", "agglomerativeclustering", 
+           "bayesiangaussianmixture", "dbscan", "optics", "birch"]
 
 # A List of Clusters
 cluster_list = [2, 3, 4, 5]
 
-cs = ClusterSupport(verbose=True, extra_parameters=extra_parameters)
+cs = ClusterSupport(
+    verbose=True, 
+    extra_parameters=extra_parameters, 
+    skipped_estimators=skipped
+)
 
-# The Multiple silhouette plot 
-# This function generate axes and a fig with all K cluster in cluster_list
-# for all fits of sklearn cluster estimators. 
 axes, fig = cs.plot_multiple_silhouette(cluster_list=cluster_list, fit=True, X=X)
+
 ```
 
 ```
   0%|          | 0/4 [00:00<?, ?it/s]
 
-K-Num: 2 -> Estimator: Birch
-K-Num: 2 -> Estimator: KMeans
-K-Num: 2 -> Estimator: MiniBatchKMeans
-K-Num: 2 -> Estimator: GaussianMixture
-K-Num: 2 -> Estimator: BisectingKMeans
-K-Num: 2 -> Estimator: SpectralClustering
-K-Num: 2 -> Estimator: SpectralBiclustering
-K-Num: 2 -> Estimator: SpectralCoclustering
-K-Num: 2 -> Estimator: AgglomerativeClustering
-K-Num: 2 -> Estimator: BayesianGaussianMixture
+Training: Estimator: kmeans -> K-Num: 2
+Training: Estimator: minibatchkmeans -> K-Num: 2
+Training: Estimator: gaussianmixture -> K-Num: 2
+Training: Estimator: bisectingkmeans -> K-Num: 2
+Training: Estimator: spectralclustering -> K-Num: 2
+Training: Estimator: spectralbiclustering -> K-Num: 2
 
- 25%|██▌       | 1/4 [00:21<01:03, 21.18s/it]
+ 25%|██▌       | 1/4 [00:14<00:43, 14.65s/it]
  
-K-Num: 3 -> Estimator: Birch
-K-Num: 3 -> Estimator: KMeans
-K-Num: 3 -> Estimator: MiniBatchKMeans
-K-Num: 3 -> Estimator: GaussianMixture
-K-Num: 3 -> Estimator: BisectingKMeans
-K-Num: 3 -> Estimator: SpectralClustering
-K-Num: 3 -> Estimator: SpectralBiclustering
-K-Num: 3 -> Estimator: SpectralCoclustering
-K-Num: 3 -> Estimator: AgglomerativeClustering
-K-Num: 3 -> Estimator: BayesianGaussianMixture
-
+Training: Estimator: kmeans -> K-Num: 3
+Training: Estimator: minibatchkmeans -> K-Num: 3
+Training: Estimator: gaussianmixture -> K-Num: 3
+Training: Estimator: bisectingkmeans -> K-Num: 3
+Training: Estimator: spectralclustering -> K-Num: 3
+Training: Estimator: spectralbiclustering -> K-Num: 3
 ...
 
 ```
@@ -164,26 +162,20 @@ The `silhouettes` variable is a pandas DataFrame of sklearn `silhouette_score` f
 
 index | 2 | 3 | 4 | 5 
 ----  | ---- | ---- | ---- | ---- 
-Birch | 0.498121 | 0.642268 | 0.718930 | 0.576824
-KMeans | 0.498121 | 0.642268 | 0.718930 | 0.563915
-MiniBatchKMeans | 0.464467 | 0.642268 | 0.718930 | 0.571246
-GaussianMixture | 0.498121 | 0.642268 | 0.718930 | 0.562774
-BisectingKMeans | 0.464467 | 0.642268 | 0.689096 | 0.577502
-SpectralClustering | 0.464467 | 0.445362 | 0.718930 | 0.583180
-SpectralBiclustering | 0.498121 | 0.642268 | 0.718930 | 0.563598
-SpectralCoclustering | 0.496553 | 0.642268 | 0.636078 | 0.559977
-AgglomerativeClustering | 0.498121 | 0.642268 | 0.718930 | 0.551425
-BayesianGaussianMixture | 0.498121 | 0.642268 | 0.718930 | 0.571731
+bisectingkmeans | 0.661884 | 0.610811 | 0.688161 | 0.564153
+gaussianmixture | 0.661884 | 0.610806 | 0.688178 | 0.548734
+kmeans | 0.661884 | 0.610811 | 0.688178 | 0.556731
+minibatchkmeans | 0.661884 | 0.610811 | 0.688178 | 0.512270
+spectralbiclustering | 0.661884 | 0.415127 | 0.542108 | 0.557163
+spectralclustering | 0.661884 | 0.610806 | 0.688178 | 0.559767
 
 
 The `no_k_silhouettes` variable is a pandas DataFrame with sklearn `silhouette_score` for no k inform sklearn estimators.
 
 index | Silhouette 
 ----  | ---- 
-DBSCAN | -0.787067
-OPTICS | -0.764838
-MeanShift | 0.498121
-AffinityPropagation | 0.124598
+affinitypropagation | 0.121989
+meanshift | 0.661884
 
 Finally, the `sils_info_results` variable if a list of all fits with cluster labels and `silhouette_samples`.
 For more details and a complete usage, please check examples folder.
