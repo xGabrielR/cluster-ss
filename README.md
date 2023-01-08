@@ -1,4 +1,4 @@
-## `cluster_ss`: Cluster Silhouette Support
+## `cluster-ss`: Cluster Silhouette Support
 
 Clustering Problems is hard and much more hard in Python, do not exists some packages to faster implementation of metrics and others helpful supports like cluster analysis, visualization, estimators training and dimensionality reduction.
 Note, This package was heavily influenced by the lazypredict package, I loved the ideia of one comand line for fit multiple estimators.
