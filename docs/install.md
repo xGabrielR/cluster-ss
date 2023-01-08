@@ -1,5 +1,5 @@
-Simple install `cluster_ss` with pip:
+Simple install `cluster-ss` with pip:
 
 ```
-pip install cluster_ss
+pip install cluster-ss
 ```
