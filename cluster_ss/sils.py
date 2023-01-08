@@ -52,16 +52,107 @@ PASS_CLUSTERS_K = [
 from warnings import filterwarnings
 filterwarnings('ignore')
 
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
+from matplotlib import pyplot as plt
+
+from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
+from sklearn.cluster import (
+    KMeans,  
+    DBSCAN, 
+    OPTICS,
+    Birch,
+    MeanShift,
+    MiniBatchKMeans,
+    BisectingKMeans,
+    SpectralClustering,
+    AffinityPropagation,
+    SpectralBiclustering,
+    SpectralCoclustering,
+    AgglomerativeClustering,
+)
+
+CLUSTER_EST = [
+    Birch,
+    KMeans,
+    MiniBatchKMeans,
+    GaussianMixture,
+    BisectingKMeans,
+    SpectralClustering,
+    SpectralBiclustering,
+    SpectralCoclustering,
+    AgglomerativeClustering,
+    BayesianGaussianMixture,
+]
+
+NO_K_CLUSTER_EST = [
+    DBSCAN,
+    OPTICS,
+    MeanShift,
+    AffinityPropagation
+]
+
+# Fit Pass because "ValueError: n_samples=5 should be >= n_clusters=6."
+PASS_CLUSTERS_K = [
+    'SpectralBiclustering'
+]
+
+# Add Scipy integration on future.
+# from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+from warnings import filterwarnings
+filterwarnings('ignore')
+
+
 class ClusterSupport():
+    """
+    Main class of the ss cluster package, it is used for general purposes 
+    such as setup estimators and params, definition of multiple trainings and plots.
+
+    Params:
+        - verbose: (Default False).
+            If True it's print estimators fit status.
+        
+        - random_state: (Default None).
+            Setup numpy random seed.
+
+        - skipped_estimators: (Default [])
+            Enter the name of one or more estimators to not train them
+
+        - extra_parameters: (Default [])
+            Inform extra estimators params inside a list or dict.
+
+            Examples of extra_parameters:
+                Example with a dict
+                    - Base ideia: {'estimator_name': {'param1': value ...}}
+                    - {'kmeans': {'max_iter': 320,'tol': 0.001}}.
+
+                Example with a list: 
+                    - Base ideia: [{'estimator_name1': {'param1': value...}}, {'estimator_name2': {...}}]
+                    - [{'kmeans': {'max_iter': 320,'tol': 0.001}}, 
+                       {'gaussianmixture': {'reg_covar': 1e-05,'tol': 0.01, ...}}]
+
+    See Also:
+        Example: https://github.com/xGabrielR/cluster_ss/blob/main/examples/complete_usage.ipynb 
+    
+    """
     def __init__(
         self, 
         verbose=False,
         random_state=None,
-        extra_parameters={}
+        extra_parameters=[],
+        skipped_estimators=[]
     ):
         self.verbose = verbose
         self.random_state = random_state
-        self.extra_parameters = extra_parameters
+        self.extra_parameters = extra_parameters,
+        self.skipped_estimators = skipped_estimators
+
+    def get_all_estimators_names(self):
+        """
+        Simple function to check all pre selected estimators names. 
+        """
+        return [i.__name__.lower() for i in CLUSTER_EST + NO_K_CLUSTER_EST]
 
     def get_clusters_infos(self, estimators_selection='all'):
         """
@@ -85,26 +176,35 @@ class ClusterSupport():
         if self.random_state:
             np.random.seed(self.random_state)
 
+        if self.skipped_estimators:
+            skipped_estimators = [str(i).lower() for i in self.skipped_estimators]
+        else:
+            skipped_estimators = []
+
         if estimators_selection == 'all':
-            all_cluster_estimators = CLUSTER_EST + NO_K_CLUSTER_EST
-            cluster_estimators_names = [est.__name__ for est in all_cluster_estimators]
+            all_cluster_estimators = [est for est in CLUSTER_EST + NO_K_CLUSTER_EST if est.__name__.lower() not in skipped_estimators]
+            cluster_estimators_names = [est.__name__.lower() for est in all_cluster_estimators]
             cluster_est_extra_params = [0 if 'n_clusters' in est().get_params().keys() else 
                                         1 if 'n_components' in est().get_params().keys() else 2 for est in all_cluster_estimators]
 
             return cluster_estimators_names, all_cluster_estimators, cluster_est_extra_params
 
         elif estimators_selection == 'k_inform':
-            cluster_estimators_names = [est.__name__ for est in CLUSTER_EST]
-            cluster_est_extra_params = [0 if 'n_clusters' in est().get_params().keys() else 1 for est in CLUSTER_EST]
+            all_cluster_estimators = [est for est in CLUSTER_EST if est.__name__.lower() not in skipped_estimators]
+            cluster_estimators_names = [est.__name__.lower() for est in all_cluster_estimators]
+            cluster_est_extra_params = [0 if 'n_clusters' in est().get_params().keys() else 1 for est in all_cluster_estimators]
 
-            return cluster_estimators_names, CLUSTER_EST, cluster_est_extra_params
+            return cluster_estimators_names, all_cluster_estimators, cluster_est_extra_params
 
         elif estimators_selection == 'no_k_inform':
-            cluster_estimators_names = [est.__name__ for est in NO_K_CLUSTER_EST]
-            return cluster_estimators_names, NO_K_CLUSTER_EST, False
+            all_cluster_estimators = [est for est in NO_K_CLUSTER_EST if est.__name__.lower() not in skipped_estimators]
+            cluster_estimators_names = [est.__name__.lower() for est in all_cluster_estimators]
+
+            return cluster_estimators_names, all_cluster_estimators, False
             
         else:
             raise ValueError(f"estimators_selection: '{self.estimators_selection}' not supported!")
+
 
     def prepare_estimators(self, estimators_selection='all'):
         """
@@ -129,20 +229,26 @@ class ClusterSupport():
         estimators_names, estimators, extimators_extra_params = self.get_clusters_infos(estimators_selection)
 
         if self.extra_parameters:
-            if isinstance(self.extra_parameters, dict):
+            # Get Params from self.extra_parameters tuple 
+            extra_params = self.extra_parameters[0]
+
+            if isinstance(extra_params, dict) and extra_params:
                 models = []
+                extra_params = {str(k).lower(): v for k, v in extra_params.items()}
+
                 for name, model in zip(estimators_names, estimators):
-                    if name in self.extra_parameters.keys():
-                        model = model(**self.extra_parameters[name])
+                    if name in list(extra_params.keys())[0].lower():
+                        model = model(**extra_params[name])
                         models.append(model)
                     else:
                         models.append(model())
 
                 return estimators_names, models, extimators_extra_params
 
-            elif isinstance(self.extra_parameters, list):
+            elif isinstance(extra_params, list) and extra_params:
                 models = []
-                est_kwargs_df = pd.DataFrame(self.extra_parameters)
+                est_kwargs_df = pd.DataFrame(extra_params)
+                est_kwargs_df.columns = [str(c).lower() for c in est_kwargs_df.columns]
 
                 for name, model in zip(estimators_names, estimators):
                     if name in est_kwargs_df.columns:
@@ -187,6 +293,9 @@ class ClusterSupport():
         """
         res, no_k_res, _ = self.fit(X, cluster_list, estimators_selection)
         ax, fig = base_sil_fig(res, cluster_list)
+
+        res = res.sort_index()
+        no_k_res = no_k_res.sort_index()
 
         return res, no_k_res, ax, fig
 
@@ -282,13 +391,15 @@ class ClusterSupport():
                          and a tuple with silhouette samples and labels
         """
         sils_dict, sils_per_k, no_k_sil = {}, pd.DataFrame(), pd.DataFrame()
-        no_k_est = [i.__name__ for i in NO_K_CLUSTER_EST]
+        no_k_est = [i.__name__.lower() for i in NO_K_CLUSTER_EST]
 
         for name, est, k_info in tqdm(zip(est_names, models, est_infos)):
             if self.verbose:
                 print(f'Start Fit Estimator: {name}')
             
             if name in no_k_est:
+                if self.verbose:
+                    print(f'Training: Estimator: {name}')
                 model = est.fit(X)
                 labels, sil_score, _ = get_sil_score(model, X)
                 no_k_sil = pd.concat([no_k_sil, pd.DataFrame({name: sil_score}, index=[0]).T.rename(columns={0:'Silhouette'})], axis=0)
@@ -296,6 +407,8 @@ class ClusterSupport():
             else:
                 estimatos_k_sils = pd.DataFrame()
                 for k in cluster_list:
+                    if self.verbose:
+                        print(f'Training: Estimator: {name} -> K-Num: {k}')
                     if k_info == 0: model = est.set_params(n_clusters=k)
                     elif k_info == 1: model = est.set_params(n_components=k)
                     else: model = est
@@ -315,6 +428,9 @@ class ClusterSupport():
                     sils_dict[name+f'_{k}'] = (sil_samples, labels)
 
                 sils_per_k = pd.concat([sils_per_k, estimatos_k_sils], axis=0)
+        
+        sils_per_k = sils_per_k.sort_index()
+        no_k_sil = no_k_sil.sort_index()
 
         return sils_per_k, no_k_sil, sils_dict
 
@@ -370,7 +486,7 @@ class ClusterSupport():
 
                     for name, est, k_info in zip(estimators_names, _models, extimators_extra_params):
                         if self.verbose:
-                            print(f'K-Num: {k} -> Estimator: {name}')
+                            print(f'Training: Estimator: {name} -> K-Num: {k}')
                             
                         if k_info == 0: model = est.set_params(n_clusters=k)
                         elif k_info == 1: model = est.set_params(n_components=k)
@@ -393,7 +509,7 @@ class ClusterSupport():
                 k_sils = {}
                 for name, est in tqdm(zip(estimators_names, _models)):
                     if self.verbose:
-                        print(f'Estimator: {name}')
+                        print(f'Training: Estimator: {name}')
 
                     model = est.fit(X)
 
@@ -404,4 +520,6 @@ class ClusterSupport():
                     
                 sils = pd.concat([sils, pd.DataFrame(k_sils, index=[0]).T.rename(columns={0:'Silhouette'})], axis=1)
             
+            sils = sils.sort_index()
+
             return sils, None, sils_dict

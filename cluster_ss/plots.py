@@ -61,8 +61,10 @@ def base_sil_fig(data, cluster_list):
     fig, ax = plt.subplots(int(data.shape[0]/2), 2, figsize=(19,14))
     ax = ax.flatten()
 
+    models_names = [i.lower() for i in MODELS_NAMES_K_INFORM]
+    
     for i, axi in zip(data.index, ax):
-        if i in MODELS_NAMES_K_INFORM:
+        if i in models_names:
             r = data[data.index == i].values[0]
             axi.plot(cluster_list, r, 'k--', marker='o')
             axi.vlines(cluster_list[np.argmax(r)], r[np.argmin(r)], r[np.argmax(r)], linestyle='--', color='gold', label='Max Silhouette')
