@@ -62,12 +62,12 @@ def base_sil_fig(data, cluster_list):
     ax = ax.flatten()
 
     models_names = [i.lower() for i in MODELS_NAMES_K_INFORM]
-    
     for i, axi in zip(data.index, ax):
         if i in models_names:
             r = data[data.index == i].values[0]
             axi.plot(cluster_list, r, 'k--', marker='o')
-            axi.vlines(cluster_list[np.argmax(r)], r[np.argmin(r)], r[np.argmax(r)], linestyle='--', color='gold', label='Max Silhouette')
+            axi.vlines(cluster_list[np.argmax(r)], r[np.argmin(r)], r[np.argmax(r)], 
+                       linestyle='--', color='gold', label='Max Silhouette')
             axi.set_ylabel('Silhouette Score')
             axi.set_xlabel('K Number')
             axi.set_title(f'{i} Silhouettes')
@@ -77,7 +77,7 @@ def base_sil_fig(data, cluster_list):
 
     return ax, fig
 
-def extended_base_sil_fig(estimator, cluster_list, ax, X):
+def extended_base_sil_fig(estimator, cluster_list, ax, X, comps):
     """
     Auxiliar function for plotting.
 
@@ -92,7 +92,13 @@ def extended_base_sil_fig(estimator, cluster_list, ax, X):
     """
     for k, axi in zip(cluster_list, ax):
         y_lower = 10
-        model = estimator.set_params(n_clusters=k).fit(X)
+
+        if comps == 'n_clusters':
+            model = estimator.set_params(n_clusters=k).fit(X)
+        
+        elif comps == 'n_components':
+            model = estimator.set_params(n_components=k).fit(X)
+        
         labels, sil_score, sil_samples = get_sil_score(model, X)
 
         for i in range(k):
@@ -132,16 +138,20 @@ def plot_silhouette(estimator, X, cluster_list, figsize=(10,7)):
         - ax: Matplotlib axes.
         - fig: Matplotlib figure.
     """
+    if isinstance(cluster_list, int):
+        raise ValueError('Please, provide a list with K clusters, Example: cluster_list=[4, 5, 6]')
+
     fig, ax = plt.subplots(int(np.ceil(len(cluster_list) / 2)), 2, figsize=figsize)
     ax = ax.flatten()
+
     estimator_params = estimator.get_params()
 
     if 'n_clusters' in estimator_params:
-        ax = extended_base_sil_fig(estimator, cluster_list, ax, X)
+        ax = extended_base_sil_fig(estimator, cluster_list, ax, X, comps='n_clusters')
         return ax, fig
 
     elif 'n_components' in estimator_params:
-        ax = extended_base_sil_fig(estimator, cluster_list, ax, X)
+        ax = extended_base_sil_fig(estimator, cluster_list, ax, X, comps='n_components')
         return ax, fig
 
     elif not isinstance(cluster_list, list):
@@ -167,9 +177,12 @@ def plot_silhouette_score(estimator, X, cluster_list, figsize=(10,7)):
         - ax: Matplotlib axes.
         - fig: Matplotlib figure.
     """
+    if isinstance(cluster_list, int):
+        raise ValueError('Please, provide a list with K clusters, Example: cluster_list=[4, 5, 6]')
+        
     estimator_params = estimator.get_params().keys()
-
     labels_at_k, sil_scores_at_k = [], []
+
     if 'n_clusters' in estimator_params:
         for k in cluster_list:
             estimator.set_params(n_clusters=k).fit(X)
@@ -179,15 +192,18 @@ def plot_silhouette_score(estimator, X, cluster_list, figsize=(10,7)):
 
     elif 'n_components' in estimator_params:
         for k in cluster_list:
-            estimator.set_params(n_clusters=k).fit(X)
+            estimator.set_params(n_components=k).fit(X)
             labels, sil_score, _ = get_sil_score(model=estimator, X=X)
             labels_at_k.append({k: labels})
             sil_scores_at_k.append(sil_score)
 
+    else:
+        raise TypeError(f"N_Cluster or N_Components params not found on estimator {estimator.__name__}") 
+
     fig, ax = plt.subplots(figsize=figsize)
     ax.plot(cluster_list, sil_scores_at_k, 'k--', marker='o')
     ax.vlines(cluster_list[np.argmax(sil_scores_at_k)], sil_scores_at_k[np.argmin(sil_scores_at_k)], 
-            sil_scores_at_k[np.argmax(sil_scores_at_k)], linestyle='--', color='gold', label='Max Silhouette')
+              sil_scores_at_k[np.argmax(sil_scores_at_k)], linestyle='--', color='gold', label='Max Silhouette')
 
     ax.set_ylabel('Silhouette Score')
     ax.set_xlabel('K Number')

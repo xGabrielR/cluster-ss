@@ -291,6 +291,9 @@ class ClusterSupport():
             - no_k_res: Pandas dataframe with silhouette results for no_k_inform estimators;
             - ax: Matplotlib axes with multiple plots.
         """
+        if isinstance(cluster_list, int):
+            raise ValueError('Please, provide a list with K clusters, Example: cluster_list=[4, 5, 6]')
+            
         res, no_k_res, _ = self.fit(X, cluster_list, estimators_selection)
         ax, fig = base_sil_fig(res, cluster_list)
 
@@ -330,6 +333,9 @@ class ClusterSupport():
             - ax: Matplotlib axes list; 
             - fig: Matplotlib fig.
         """
+        if isinstance(cluster_list, int):
+            raise ValueError('Please, provide a list with K clusters, Example: cluster_list=[4, 5, 6]')
+
         if fit:
             silhouette_scores, _, silhouette_dict = self.fit(X, cluster_list)
         
@@ -464,6 +470,9 @@ class ClusterSupport():
                     {'Birch_2': (array([0.4647072, ..., 0.43923615]),
                                  array([0, 1, 0, ..., 0, 0, 0]))
         """
+        if isinstance(cluster_list, int):
+            raise ValueError('Please, provide a list with K clusters, Example: cluster_list=[4, 5, 6]')
+
         sils = pd.DataFrame()
         estimators_names, _models, extimators_extra_params = self.prepare_estimators(estimators_selection)
         X = convert_types(X=X)
