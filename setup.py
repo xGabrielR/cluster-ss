@@ -12,7 +12,6 @@ install_requires = [
     "scikit-learn>=1.2.0",
     "scipy>=1.9.3",
     "six>=1.16.0",
-    "sklearn>=0.0",
     "threadpoolctl>=3.1.0",
     "tqdm>=4.64.1",
     "matplotlib>=3.6.2"
@@ -20,7 +19,7 @@ install_requires = [
 
 setup(
     name="cluster_ss",
-    version="0.0.3",
+    version="0.0.4",
     url="https://github.com/xGabrielR/cluster-ss",
     author="Gabriel R.",
     author_email="gabrielrichter2021@gmail.com",

@@ -52,58 +52,6 @@ PASS_CLUSTERS_K = [
 from warnings import filterwarnings
 filterwarnings('ignore')
 
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
-from matplotlib import pyplot as plt
-
-from sklearn.mixture import GaussianMixture, BayesianGaussianMixture
-from sklearn.cluster import (
-    KMeans,  
-    DBSCAN, 
-    OPTICS,
-    Birch,
-    MeanShift,
-    MiniBatchKMeans,
-    BisectingKMeans,
-    SpectralClustering,
-    AffinityPropagation,
-    SpectralBiclustering,
-    SpectralCoclustering,
-    AgglomerativeClustering,
-)
-
-CLUSTER_EST = [
-    Birch,
-    KMeans,
-    MiniBatchKMeans,
-    GaussianMixture,
-    BisectingKMeans,
-    SpectralClustering,
-    SpectralBiclustering,
-    SpectralCoclustering,
-    AgglomerativeClustering,
-    BayesianGaussianMixture,
-]
-
-NO_K_CLUSTER_EST = [
-    DBSCAN,
-    OPTICS,
-    MeanShift,
-    AffinityPropagation
-]
-
-# Fit Pass because "ValueError: n_samples=5 should be >= n_clusters=6."
-PASS_CLUSTERS_K = [
-    'SpectralBiclustering'
-]
-
-# Add Scipy integration on future.
-# from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
-from warnings import filterwarnings
-filterwarnings('ignore')
-
-
 class ClusterSupport():
     """
     Main class of the ss cluster package, it is used for general purposes 
